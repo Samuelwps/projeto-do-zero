@@ -1,6 +1,7 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Header from '../../components/Header';
 import {FiCalendar, FiClock, FiUser} from "react-icons/fi"
+import { useRouter } from 'next/router';
 
 import { getPrismicClient } from '../../services/prismic';
 
@@ -31,7 +32,22 @@ interface PostProps {
 }
 
 export default function Post({post}: PostProps) {
-  console.log(post.data.author)
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+
+ const totalWords = post.data.content.reduce((total, contentItem) => {
+  const headingTime = contentItem.heading?.split(/\s+/).length;
+  const wordsTime = RichText.asText(contentItem.body)?.split(/\s+/).length;
+
+    return total + headingTime + wordsTime;
+  }, 0);
+  const readTime = Math.ceil(totalWords / 200);
+
+
+
   return(
     <>
       <Header/>
@@ -52,7 +68,7 @@ export default function Post({post}: PostProps) {
                 {post.data.author}
               </li>
               <li>
-                <FiClock/>1 min
+                <FiClock/>{`${readTime} min`}
               </li>
             </ul>
           </div>
@@ -78,11 +94,19 @@ export default function Post({post}: PostProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // const prismic = getPrismicClient({});
-  // const posts = await prismic.getByType(TODO);
+  const prismic = getPrismicClient({});
+  const posts = await prismic.getByType("posts");
+
+  const paths = posts.results.map(post => {
+    return {
+      params: {
+        slug: post.uid
+      },
+    }
+  })
 
   return{
-    paths:[],
+    paths,
     fallback:true,
 
   }
@@ -92,7 +116,6 @@ export const getStaticProps: GetStaticProps = async (context) => {
   const prismic = getPrismicClient({});
   const {slug} = context.params
   const response = await prismic.getByUID("posts", String(slug), {});
-
   const post = {
     uid: response.uid,
     first_publication_date: response.first_publication_date,
