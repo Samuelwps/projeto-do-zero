@@ -51,34 +51,29 @@ const Home: NextPage = ({postsPagination}:HomeProps) => {
   const [currentPage, setCurrentPage] = useState(1)
 
   async function handleNextPage(): Promise<void>{
-    try{
-      if(currentPage != 1 && nextPage === null){
-        return
-      }
-
-      const postsResults = await fetch(`${nextPage}`).then(response =>
-        response.json()
-      )
-
-      setNextPage(postsResults.next_page)
-      setCurrentPage(postsResults.page)
-
-      const newPosts = postsResults.results.map(post => {
-        return {
-        uid: post.uid,
-        first_publication_date: post.first_publication_date,
-        data: {
-          title: post.data.title,
-          subtitle: post.data.subtitle,
-          author: post.data.author,
-        }
-      }
-      });
-      setPosts([...posts, ...newPosts])
-      alert("Bom")
-    } catch {
-      alert("Erro")
+    if(currentPage != 1 && nextPage === null){
+      return
     }
+
+    const postsResults = await fetch(`${nextPage}`).then(response =>
+      response.json()
+    )
+
+    setNextPage(postsResults.next_page)
+    setCurrentPage(postsResults.page)
+
+    const newPosts = postsResults.results.map(post => {
+      return {
+      uid: post.uid,
+      first_publication_date: post.first_publication_date,
+      data: {
+        title: post.data.title,
+        subtitle: post.data.subtitle,
+        author: post.data.author,
+      }
+    }
+    });
+    setPosts([...posts, ...newPosts])
   }
 
 
@@ -131,7 +126,7 @@ export const getStaticProps = async () => {
     }
   );
 
-  const posts =  postsResponse.results.map(post =>{
+  const posts = postsResponse.results.map(post =>{
     return {
       uid: post.uid,
       first_publication_date: post.first_publication_date,
